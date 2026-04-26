@@ -1,0 +1,224 @@
+// PLTS Supply Tracker — Prisma Schema
+// Database: SQLite (local dev) → PostgreSQL/Supabase (production)
+// All tables use UUID primary keys, created_at, updated_at, created_by
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// MASTER DATA
+// ============================================================
+
+/// Master data produk PLTS (Panel Surya, Inverter, Baterai, dll)
+model Product {
+  id           String   @id @default(uuid())
+  code         String   @unique /// Kode produk unik, contoh: PV-001
+  name         String   /// Nama lengkap produk
+  category     String   /// Panel Surya / Inverter / Baterai / dll
+  unit         String   /// pcs / unit / meter / set
+  reorderPoint Int      @default(5) @map("reorder_point") /// Minimum stok sebelum reorder alert
+  description  String?  /// Spesifikasi teknis (opsional)
+  isActive     Boolean  @default(true) @map("is_active") /// Soft delete flag
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdBy    String?  @map("created_by") /// user_id pembuat
+
+  // Relations
+  stockBatches      StockBatch[]
+  salesTransactions SalesTransaction[]
+
+  @@map("products")
+}
+
+/// Master data installer / mitra pemasang PLTS
+model Installer {
+  id          String   @id @default(uuid())
+  code        String   @unique /// Kode installer unik, contoh: INS-A
+  name        String   /// Nama perusahaan / mitra installer
+  picName     String?  @map("pic_name") /// Nama PIC
+  phone       String?  /// Nomor HP
+  city        String?  /// Kota
+  priceScheme String?  @map("price_scheme") /// Harga A / Harga B / Harga C
+  notes       String?  /// Catatan tambahan
+  isActive    Boolean  @default(true) @map("is_active") /// Soft delete flag
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+
+  // Relations
+  salesTransactions SalesTransaction[]
+
+  @@map("installers")
+}
+
+// ============================================================
+// TRANSAKSI
+// ============================================================
+
+/// Batch barang masuk — setiap pembelian stok dicatat sebagai 1 batch
+model StockBatch {
+  id           String   @id @default(uuid())
+  batchNumber  String   @unique @map("batch_number") /// No. Batch unik, contoh: BCH-2501-001
+  productId    String   @map("product_id") /// FK → products.id
+  supplierName String   @map("supplier_name") /// Nama supplier
+  entryDate    DateTime @map("entry_date") /// Tanggal barang masuk
+  qtyIn        Int      @map("qty_in") /// Jumlah unit masuk
+  hppPerUnit   Float    @map("hpp_per_unit") /// Harga beli / HPP per unit (Rp)
+  totalHpp     Float    @map("total_hpp") /// COMPUTED: qty_in × hpp_per_unit
+  notes        String?  /// Keterangan batch
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdBy    String?  @map("created_by")
+
+  // Relations
+  product           Product            @relation(fields: [productId], references: [id])
+  salesTransactions SalesTransaction[]
+
+  @@map("stock_batches")
+}
+
+/// Transaksi penjualan — setiap item penjualan terikat ke satu batch
+model SalesTransaction {
+  id                  String   @id @default(uuid())
+  invoiceNumber       String   @map("invoice_number") /// No. Faktur, contoh: INV-2501-001
+  saleDate            DateTime @map("sale_date") /// Tanggal transaksi
+  installerId         String   @map("installer_id") /// FK → installers.id
+  batchId             String   @map("batch_id") /// FK → stock_batches.id
+  productId           String   @map("product_id") /// FK → products.id
+  qtySold             Int      @map("qty_sold") /// Jumlah unit terjual
+  hppPerUnit          Float    @map("hpp_per_unit") /// Snapshot HPP saat transaksi
+  sellingPricePerUnit Float    @map("selling_price_per_unit") /// Harga jual ke installer (Rp)
+  totalHpp            Float    @map("total_hpp") /// COMPUTED: qty_sold × hpp_per_unit
+  totalRevenue        Float    @map("total_revenue") /// COMPUTED: qty_sold × selling_price
+  grossProfit         Float    @map("gross_profit") /// COMPUTED: total_revenue − total_hpp
+  paymentStatus       String   @default("Belum Bayar") @map("payment_status") /// Lunas / Cicilan / Belum Bayar
+  notes               String?  /// Keterangan tambahan
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  createdBy           String?  @map("created_by")
+
+  // Relations
+  installer Installer  @relation(fields: [installerId], references: [id])
+  batch     StockBatch @relation(fields: [batchId], references: [id])
+  product   Product    @relation(fields: [productId], references: [id])
+
+  @@map("sales_transactions")
+}
+
+/// Rekap bulanan — agregasi data penjualan per bulan
+model MonthlySummary {
+  id              String   @id @default(uuid())
+  yearMonth       String   @unique @map("year_month") /// Format: 2025-01
+  totalRevenue    Float    @default(0) @map("total_revenue")
+  totalHpp        Float    @default(0) @map("total_hpp")
+  grossProfit     Float    @default(0) @map("gross_profit") /// COMPUTED: revenue − hpp
+  operationalCost Float    @default(0) @map("operational_cost") /// Input manual oleh Admin
+  netProfit       Float    @default(0) @map("net_profit") /// COMPUTED: gross − opex
+  notes           String?  /// Catatan bulan tersebut
+  isFinalized     Boolean  @default(false) @map("is_finalized") /// TRUE = dikunci
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdBy       String?  @map("created_by")
+
+  // Relations
+  profitSharingPayments ProfitSharingPayment[]
+
+  @@map("monthly_summaries")
+}
+
+/// Konfigurasi bagi hasil — atur porsi % per pihak
+model ProfitSharingConfig {
+  id              String    @id @default(uuid())
+  partyName       String    @map("party_name") /// Nama pihak
+  role            String    /// Role: owner / investor / partner
+  sharePercentage Float     @map("share_percentage") /// Porsi % bagi hasil
+  effectiveFrom   DateTime  @map("effective_from") /// Tanggal mulai berlaku
+  effectiveTo     DateTime? @map("effective_to") /// Tanggal akhir berlaku (null = masih aktif)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  createdBy       String?   @map("created_by")
+
+  // Relations
+  payments ProfitSharingPayment[]
+
+  @@map("profit_sharing_config")
+}
+
+/// Realisasi pembayaran bagi hasil per bulan per pihak
+model ProfitSharingPayment {
+  id               String   @id @default(uuid())
+  monthlySummaryId String   @map("monthly_summary_id") /// FK → monthly_summaries.id
+  partyConfigId    String   @map("party_config_id") /// FK → profit_sharing_config.id
+  amountDue        Float    @map("amount_due") /// Jumlah yang harus dibayar
+  amountPaid       Float    @default(0) @map("amount_paid") /// Jumlah yang sudah dibayar
+  paidDate         DateTime? @map("paid_date") /// Tanggal pembayaran
+  paymentProofUrl  String?  @map("payment_proof_url") /// URL bukti transfer
+  notes            String?  /// Catatan
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  createdBy        String?  @map("created_by")
+
+  // Relations
+  monthlySummary MonthlySummary      @relation(fields: [monthlySummaryId], references: [id])
+  partyConfig    ProfitSharingConfig @relation(fields: [partyConfigId], references: [id])
+
+  @@map("profit_sharing_payments")
+}
+
+/// Audit log — mencatat semua operasi INSERT / UPDATE / DELETE
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id") /// ID user yang melakukan aksi
+  action    String   /// INSERT / UPDATE / DELETE
+  tableName String   @map("table_name") /// Nama tabel yang diubah
+  recordId  String   @map("record_id") /// ID record yang diubah
+  oldValue  String?  @map("old_value") /// Nilai lama (JSON)
+  newValue  String?  @map("new_value") /// Nilai baru (JSON)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+}
+
+/// User — untuk mock auth (akan diganti Supabase Auth di production)
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String   /// Hashed password (bcrypt)
+  role      String   @default("operator") /// admin / mitra / operator
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+/// Pengaturan sistem (Bagi Hasil %, dll)
+model SystemSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique /// investor_share, manager_share, dll
+  value     String   /// Nilai dalam string (convert di aplikasi)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+
+/// Biaya operasional bulanan (Listrik, Gaji, dll) - diisi manual per bulan
+model MonthlyExpense {
+  id        String   @id @default(uuid())
+  month     Int      /// 1-12
+  year      Int      /// 2024, 2025, dll
+  amount    Float    @default(0) /// Total biaya operasional (Rp)
+  notes     String?  /// Keterangan biaya
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy String?  @map("created_by")
+
+  @@unique([month, year], name: "month_year")
+  @@map("monthly_expenses")
+}

@@ -135,25 +135,19 @@ export function Topbar({
         {user && (
           <DropdownMenu>
             <DropdownMenuTrigger render={
-              <Button
-                variant="ghost"
-                className="flex items-center gap-2 px-2"
+              <button
+                className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <Avatar className="w-8 h-8">
-                  <AvatarFallback className="bg-gradient-to-br from-amber-400 to-orange-500 text-white text-xs font-bold">
-                    {getInitials(user.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="hidden sm:flex flex-col items-start">
-                  <span className="text-sm font-medium">{user.name}</span>
-                  <Badge
-                    variant="secondary"
-                    className="text-[10px] px-1.5 py-0 h-4"
-                  >
-                    {ROLE_LABELS[user.role as UserRole] || user.role}
-                  </Badge>
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                  {getInitials(user.name)}
                 </div>
-              </Button>
+                <div className="hidden sm:flex flex-col items-start leading-tight">
+                  <span className="text-sm font-medium">{user.name}</span>
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                    {ROLE_LABELS[user.role as UserRole] || user.role}
+                  </span>
+                </div>
+              </button>
             } />
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>

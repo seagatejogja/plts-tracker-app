@@ -177,9 +177,9 @@ export default function UserManagementPage() {
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger render={
-                            <Button variant="ghost" size="icon">
+                            <button className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring">
                               <MoreHorizontal className="h-4 w-4" />
-                            </Button>
+                            </button>
                           } />
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Aksi</DropdownMenuLabel>

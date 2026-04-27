@@ -1,19 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
+import { prisma } from "@/lib/prisma";
 
 /**
  * PUT /api/users/[id]
  * Update user details
  */
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export async function PUT(
+  request: NextRequest, 
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { email, name, role, isActive, password } = body;
 
@@ -72,9 +69,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
  * DELETE /api/users/[id]
  * Soft delete (toggle isActive)
  */
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(
+  request: NextRequest, 
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const user = await prisma.user.findUnique({
       where: { id },

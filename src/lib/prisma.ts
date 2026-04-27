@@ -21,7 +21,7 @@ function createPrismaClient(): PrismaClient {
   // Create pg pool (enforce SSL in production for Supabase)
   const pool = new Pool({ 
     connectionString,
-    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined
+    ssl: { rejectUnauthorized: false }
   });
   const adapter = new PrismaPg(pool);
 

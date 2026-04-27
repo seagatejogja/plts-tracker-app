@@ -132,42 +132,19 @@ export function Topbar({
         </Button>
 
         {/* User dropdown menu */}
+        {/* User profile info */}
         {user && (
-          <DropdownMenu>
-            <DropdownMenuTrigger render={
-              <button
-                className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center text-xs font-bold shrink-0">
-                  {getInitials(user.name)}
-                </div>
-                <div className="hidden sm:flex flex-col items-start leading-tight">
-                  <span className="text-sm font-medium">{user.name}</span>
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                    {ROLE_LABELS[user.role as UserRole] || user.role}
-                  </span>
-                </div>
-              </button>
-            } />
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">{user.name}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>Profil</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Logout</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-3 ml-2 border-l pl-4">
+            <div className="hidden sm:flex flex-col items-end leading-tight">
+              <span className="text-sm font-medium">{user.name}</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                {ROLE_LABELS[user.role as UserRole] || user.role}
+              </span>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-sm">
+              {getInitials(user.name)}
+            </div>
+          </div>
         )}
       </div>
     </header>

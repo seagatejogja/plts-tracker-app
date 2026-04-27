@@ -34,6 +34,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
+import { cn } from "@/lib/utils";
 import { UserForm } from "@/components/features/master/user-form";
 import { ROLE_LABELS, type UserRole } from "@/lib/constants";
 
@@ -174,39 +175,29 @@ export default function UserManagementPage() {
                           year: "numeric" 
                         })}
                       </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger render={
-                            <button className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </button>
-                          } />
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => { setSelectedUser(u); setFormOpen(true); }}>
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Edit User
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              className={u.isActive ? "text-destructive" : "text-green-600"}
-                              onClick={() => handleDeactivate(u.id)}
-                              disabled={u.id === currentUser.id}
-                            >
-                              {u.isActive ? (
-                                <>
-                                  <UserX className="mr-2 h-4 w-4" />
-                                  Nonaktifkan
-                                </>
-                              ) : (
-                                <>
-                                  <UserCheck className="mr-2 h-4 w-4" />
-                                  Aktifkan
-                                </>
-                              )}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-blue-500 hover:bg-blue-50"
+                            onClick={() => { setSelectedUser(u); setFormOpen(true); }}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className={cn(
+                              "h-8 w-8",
+                              u.isActive ? "text-destructive hover:bg-red-50" : "text-green-600 hover:bg-green-50"
+                            )}
+                            onClick={() => handleDeactivate(u.id)}
+                            disabled={u.id === currentUser.id}
+                          >
+                            {u.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))

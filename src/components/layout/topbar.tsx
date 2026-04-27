@@ -134,7 +134,7 @@ export function Topbar({
         {/* User dropdown menu */}
         {user && (
           <DropdownMenu>
-            <DropdownMenuTrigger render={
+            <DropdownMenuTrigger>
               <Button
                 variant="ghost"
                 className="flex items-center gap-2 px-2"
@@ -154,7 +154,7 @@ export function Topbar({
                   </Badge>
                 </div>
               </Button>
-            } />
+            </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">

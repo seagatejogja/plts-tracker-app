@@ -63,6 +63,28 @@ export default function LoginPage() {
     }
   };
 
+  /**
+   * Quick login for development testing
+   */
+  const handleQuickLogin = async (e: string, p: string) => {
+    setEmail(e);
+    setPassword(p);
+    setIsSubmitting(true);
+    setError("");
+    try {
+      const result = await login(e, p);
+      if (result.success) {
+        router.push("/");
+      } else {
+        setError(result.error || "Login gagal");
+      }
+    } catch {
+      setError("Terjadi kesalahan. Silakan coba lagi.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
       {/* Background decorative elements */}
@@ -172,24 +194,45 @@ export default function LoginPage() {
               )}
             </Button>
 
-            {/* Demo credentials hint */}
-            <div className="mt-4 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
-              <p className="text-xs text-slate-400 text-center mb-2 font-medium">
-                Demo Credentials
+            {/* Demo credentials interactive switcher */}
+            <div className="mt-6 p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 backdrop-blur-sm">
+              <p className="text-[10px] uppercase tracking-wider text-slate-500 text-center mb-3 font-bold">
+                Akses Cepat (Dev Mode)
               </p>
-              <div className="space-y-1 text-xs text-slate-500">
-                <p>
-                  <span className="text-slate-400">Admin:</span>{" "}
-                  admin@plts-tracker.com / admin123
-                </p>
-                <p>
-                  <span className="text-slate-400">Mitra:</span>{" "}
-                  mitra@plts-tracker.com / mitra123
-                </p>
-                <p>
-                  <span className="text-slate-400">Operator:</span>{" "}
-                  operator@plts-tracker.com / operator123
-                </p>
+              <div className="grid grid-cols-1 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleQuickLogin("admin@plts-tracker.com", "admin123")}
+                  className="justify-start bg-slate-900/50 border-amber-500/20 hover:bg-amber-500/10 hover:border-amber-500/40 text-slate-300 text-xs h-9"
+                  disabled={isSubmitting}
+                >
+                  <Zap className="w-3.5 h-3.5 mr-2 text-amber-500" />
+                  Login sebagai <span className="text-amber-500 ml-1 font-bold">Admin</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleQuickLogin("mitra@plts-tracker.com", "mitra123")}
+                  className="justify-start bg-slate-900/50 border-orange-500/20 hover:bg-orange-500/10 hover:border-orange-500/40 text-slate-300 text-xs h-9"
+                  disabled={isSubmitting}
+                >
+                  <Zap className="w-3.5 h-3.5 mr-2 text-orange-500" />
+                  Login sebagai <span className="text-orange-500 ml-1 font-bold">Mitra</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleQuickLogin("operator@plts-tracker.com", "operator123")}
+                  className="justify-start bg-slate-900/50 border-blue-500/20 hover:bg-blue-500/10 hover:border-blue-500/40 text-slate-300 text-xs h-9"
+                  disabled={isSubmitting}
+                >
+                  <Zap className="w-3.5 h-3.5 mr-2 text-blue-500" />
+                  Login sebagai <span className="text-blue-500 ml-1 font-bold">Operator</span>
+                </Button>
               </div>
             </div>
           </form>
@@ -198,8 +241,8 @@ export default function LoginPage() {
 
       {/* Footer */}
       <div className="absolute bottom-4 text-center w-full">
-        <p className="text-xs text-slate-600">
-          © 2026 PLTS Supply Tracker · v1.0.0
+        <p className="text-[10px] text-slate-600 uppercase tracking-widest">
+          © 2026 PLTS Supply Tracker · Enterprise Edition
         </p>
       </div>
     </div>

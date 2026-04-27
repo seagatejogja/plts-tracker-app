@@ -147,6 +147,7 @@ export const NAV_ITEMS = [
     children: [
       { title: "Produk", href: "/master/produk", roles: ["admin"] },
       { title: "Installer", href: "/master/installer", roles: ["admin"] },
+      { title: "Manajemen User", href: "/master/user", roles: ["admin"] },
     ],
   },
   {

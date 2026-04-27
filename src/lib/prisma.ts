@@ -18,7 +18,11 @@ const globalForPrisma = globalThis as unknown as {
 function createPrismaClient(): PrismaClient {
   const connectionString = `${process.env.DATABASE_URL}`;
   
-  const pool = new Pool({ connectionString });
+  // Create pg pool (enforce SSL in production for Supabase)
+  const pool = new Pool({ 
+    connectionString,
+    ssl: process.env.NODE_ENV === "production" ? true : undefined
+  });
   const adapter = new PrismaPg(pool);
 
   return new PrismaClient({

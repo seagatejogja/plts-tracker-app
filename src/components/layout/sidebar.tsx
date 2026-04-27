@@ -60,7 +60,7 @@ interface SidebarProps {
  */
 export function Sidebar({ collapsed = false }: SidebarProps) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [openGroups, setOpenGroups] = useState<string[]>([]);
 
   /** Toggle submenu group open/close */
@@ -212,14 +212,32 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
         })}
       </nav>
 
-      {/* Footer — version info */}
-      {!collapsed && (
-        <div className="px-4 py-3 border-t border-sidebar-border">
-          <p className="text-[10px] text-muted-foreground text-center">
-            PLTS Tracker v1.0.0
-          </p>
-        </div>
-      )}
+      {/* Sidebar Footer */}
+      <div className="mt-auto border-t border-sidebar-border p-2 space-y-1">
+        <button
+          onClick={() => {
+            if (confirm("Apakah Anda yakin ingin logout?")) {
+              logout();
+              window.location.href = "/login";
+            }
+          }}
+          className={cn(
+            "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+            "text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+          )}
+        >
+          <LogOut className="w-[18px] h-[18px] shrink-0" />
+          {!collapsed && <span>Logout</span>}
+        </button>
+
+        {!collapsed && (
+          <div className="px-2 py-2">
+            <p className="text-[10px] text-muted-foreground text-center">
+              PLTS Tracker v1.0.0
+            </p>
+          </div>
+        )}
+      </div>
     </aside>
   );
 }

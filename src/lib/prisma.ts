@@ -1,39 +1,29 @@
 /**
- * Prisma Client Singleton
+ * Prisma Client Singleton — PLTS Supply Tracker
  * Prevents multiple instances during development hot-reload
- * Prisma v7 — uses better-sqlite3 adapter for local dev
+ * Connects to PostgreSQL (Supabase) via DATABASE_URL
  */
 import { PrismaClient } from "@prisma/client";
-import Database from "better-sqlite3";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
 /**
- * Create Prisma client with SQLite adapter
- * In production, this will be swapped for Supabase PostgreSQL adapter
+ * Create Prisma client for PostgreSQL (Supabase)
+ * @returns PrismaClient instance configured with appropriate logging
  */
 function createPrismaClient(): PrismaClient {
-  // If we have a DATABASE_URL (production/postgresql), use standard Prisma
-  if (process.env.DATABASE_URL) {
-    return new PrismaClient({
-      log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-    });
-  }
-
-  // Fallback to SQLite adapter for local dev (Note: This requires schema to be compatible or re-generated)
-  const adapter = new PrismaBetterSqlite3({
-    url: "file:./prisma/dev.db"
-  });
+  const connectionString = `${process.env.DATABASE_URL}`;
+  
+  const pool = new Pool({ connectionString });
+  const adapter = new PrismaPg(pool);
 
   return new PrismaClient({
     adapter,
-    log:
-      process.env.NODE_ENV === "development"
-        ? ["error", "warn"]
-        : ["error"],
+    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
 }
 

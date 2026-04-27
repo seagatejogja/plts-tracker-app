@@ -30,6 +30,7 @@ import { useAuth } from "@/lib/auth-context";
 
 export default function FinancialReportPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<any>(null);
   
